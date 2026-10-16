@@ -8,3 +8,5 @@ run
 .scala-build
 .cache
 compile_commands.json
+build_vcs
+line_trace.txt

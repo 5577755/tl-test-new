@@ -226,6 +226,20 @@ coupledL2-test-matrix: coupledL2-verilog-test-top-matrix coupledL2-verilate \
 
 coupledL2-test-matrix-tltest: tltest-config-coupledL2-test-matrix tltest-build-all-coupledL2
 
+# VCS backend: DPI Guest Mode replay of the same trace as the Verilator flow.
+# Requires VCS locally (VCS_HOME) and a license (LM_LICENSE_FILE); see vcs/run_vcs.sh.
+coupledL2-test-matrix-vcs: coupledL2-verilog-test-top-matrix \
+						   tltest-config-coupledL2-test-matrix tltest-build-dpi-coupledL2
+
+vcs-build:
+	bash ./vcs/run_vcs.sh build
+
+vcs-run:
+	bash ./vcs/run_vcs.sh run
+
+vcs-coverage:
+	bash ./vcs/run_vcs.sh coverage
+
 openLLC-test-l2l3: openLLC-compile openLLC-verilog-test-top-l2l3 openLLC-verilate \
 				   tltest-config-openLLC-test-l2l3 tltest-build-all-openLLC
 
