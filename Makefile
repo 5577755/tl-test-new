@@ -98,17 +98,23 @@ tltest-build:
 	$(MAKE) -C ./main/build -j$(THREADS_BUILD) -s
 	$(MAKE) -C ./main/build portgen -j$(THREADS_BUILD) -s --always-make
 
-tltest-build-all-coupledL2: tltest-prepare-all-coupledL2 tltest-build
+tltest-build-all-coupledL2: tltest-prepare-all-coupledL2
+	$(MAKE) tltest-build
 
-tltest-build-dpi-coupledL2: tltest-prepare-dpi-coupledL2 tltest-build
+tltest-build-dpi-coupledL2: tltest-prepare-dpi-coupledL2
+	$(MAKE) tltest-build
 
-tltest-build-v3-coupledL2: tltest-prepare-v3-coupledL2 tltest-build
+tltest-build-v3-coupledL2: tltest-prepare-v3-coupledL2
+	$(MAKE) tltest-build
 
-tltest-build-all-openLLC: tltest-prepare-all-openLLC tltest-build
+tltest-build-all-openLLC: tltest-prepare-all-openLLC
+	$(MAKE) tltest-build
 
-tltest-build-dpi-openLLC: tltest-prepare-dpi-openLLC tltest-build
+tltest-build-dpi-openLLC: tltest-prepare-dpi-openLLC
+	$(MAKE) tltest-build
 
-tltest-build-v3-openLLC: tltest-prepare-v3-openLLC tltest-build
+tltest-build-v3-openLLC: tltest-prepare-v3-openLLC
+	$(MAKE) tltest-build
 
 
 coupledL2-compile:
