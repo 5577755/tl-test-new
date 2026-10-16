@@ -21,7 +21,10 @@
 #endif
 
 
-static bool wave_enable     = true;
+// Full-run FST dumping crashes during reset with the current Verilator/FST
+// combination. Keep waveform generation opt-in while functional replay and
+// ChiselDB remain enabled.
+static bool wave_enable     = false;
 static uint64_t wave_begin  = 0;
 static uint64_t wave_end    = 0;
 
