@@ -315,9 +315,27 @@ bool MFuzzer::do_read_modify(paddr_t addr)  {
 }
 
 bool MFuzzer::read_ack() {
-    return mAgent->is_m_fired();
+    // Matrix read data is returned on the D channel as 2-beat AccessAckData
+    // in this test top (the M channel never fires here). Count one ack per
+    // completed transaction instead of per beat, otherwise the trace
+    // dispatcher's fence bookkeeping (numReadSent == numReadReceived) never
+    // balances and the replay deadlocks at the first FE.
+    static bool last_beat = false;
+    auto &chnD = mAgent->getPort()->d;
+    if (chnD.fire() && TLEnumEquals(chnD.opcode, TLOpcodeD::AccessAckData)) {
+        if (last_beat) {
+            last_beat = false;
+            return true;
+        } else {
+            last_beat = true;
+        }
+    }
+    return false;
 }
 
 bool MFuzzer::write_ack() {
-    return mAgent->is_d_fired();
+    // PutFullData is acknowledged by a single AccessAck. Do not count the
+    // AccessAckData beats of read responses as write acks.
+    auto &chnD = mAgent->getPort()->d;
+    return chnD.fire() && TLEnumEquals(chnD.opcode, TLOpcodeD::AccessAck);
 }
