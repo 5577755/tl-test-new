@@ -10,3 +10,7 @@ run
 compile_commands.json
 build_vcs
 line_trace.txt
+traces
+build_vcs_t1
+build_vcs_t2
+__pycache__/

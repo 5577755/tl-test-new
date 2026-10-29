@@ -237,8 +237,12 @@ vcs-build:
 vcs-run:
 	bash ./vcs/run_vcs.sh run
 
+# TRACE selects a trace under traces/ (default: repo-root line_trace.txt).
 vcs-coverage:
-	bash ./vcs/run_vcs.sh coverage
+	bash ./vcs/run_vcs.sh coverage $(TRACE)
+
+vcs-coverage-merge:
+	bash ./vcs/run_vcs.sh coverage-merge
 
 openLLC-test-l2l3: openLLC-compile openLLC-verilog-test-top-l2l3 openLLC-verilate \
 				   tltest-config-openLLC-test-l2l3 tltest-build-all-openLLC

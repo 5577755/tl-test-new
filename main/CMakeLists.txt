@@ -68,6 +68,12 @@ ADD_DEFINITIONS(-DVERILATED_PATH_TOKEN=${VERILATED_PATH})
 ADD_DEFINITIONS(-DVERILATOR_INCLUDE="${VERILATOR_INCLUDE}")
 ADD_DEFINITIONS(-DTLTEST_MEMORY=${TLTEST_MEMORY})
 ADD_DEFINITIONS(-DDUMP_PERFCNT=${DUMP_PERFCNT})
+# CFuzzer::tick() (FUZZ_ARI / FUZZ_STREAM random stimulus) early-returns
+# behind `#ifndef TLC_TEST`; nothing in this tree ever defined it, so the
+# fuzz modes were compiled out and FUZZ runs produced zero traffic while
+# never reaching their own finish condition. The macro guards no other
+# behavioral code (everything else matching TLC_TEST* is include guards).
+ADD_DEFINITIONS(-DTLC_TEST)
 
 if (TLTEST_PORTGEN_DYNAMIC)
     ADD_DEFINITIONS(-DTLTEST_PORTGEN_DYNAMIC)

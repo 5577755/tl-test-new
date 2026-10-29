@@ -1,6 +1,8 @@
 #include "clogdpi_b.hpp"
 
 #include <atomic>
+#include <chrono>
+#include <cstdlib>
 #include <cstdint>
 #include <ios>
 #include <iostream>
@@ -24,7 +26,7 @@
 struct CLogBHandle {
     std::ofstream*                          ofs;
     std::string                             ofpath;
-    moodycamel::ConcurrentQueue<CLog::CLogB::TagCHIRecords*>*   
+    moodycamel::ConcurrentQueue<CLog::CLogB::TagCHIRecords*>*
                                             queue;
     std::atomic_bool                        stop;
     std::thread                             worker;
@@ -34,6 +36,13 @@ struct CLogBHandle {
 
     CLog::CLogB::TagCHIRecords*             records;
     uint64_t                                lastRecordTime;
+
+    // HBL2: per-record bookkeeping (heap alloc + queue + writer-thread
+    // file I/O) dominates simulation wall time on transaction-heavy
+    // traces. HBL2_CLOGB_DISABLE=1 bypasses WriteRecord entirely: the
+    // .clog.b file stays empty, everything else (coverage, checks) is
+    // unaffected.
+    bool                                    disabled;
 };
 
 std::unordered_map<std::string, CLogBHandle*> SHARED_HANDLES;
@@ -69,6 +78,10 @@ extern "C" void* CLogB_OpenFile(
     handle->ofpath  = path;
     handle->queue   = new moodycamel::ConcurrentQueue<CLog::CLogB::TagCHIRecords*>;
     handle->stop    = false;
+    handle->disabled = (getenv("HBL2_CLOGB_DISABLE") != nullptr);
+
+    if (handle->disabled)
+        std::cout << "[CLog.B] HBL2_CLOGB_DISABLE=1: record writes bypassed (" << path << ")" << std::endl;
 
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
@@ -83,6 +96,9 @@ extern "C" void* CLogB_OpenFile(
             }
             else if (handle->stop)
                 return;
+            else
+                // idle (e.g. record writes disabled): don't burn a core
+                std::this_thread::sleep_for(std::chrono::microseconds(200));
         }
     });
 
@@ -281,11 +297,15 @@ extern "C" void CLogB_WriteRecord(
     const uint32_t*     flit,
     uint32_t            flitLength)
 {
+    CLogBHandle* chandle = (CLogBHandle*) handle;
+
+    if (chandle->disabled)
+        return;
+
     //
     size_t flitLength8 = (flitLength + 7) >> 3;
 
     //
-    CLogBHandle* chandle = (CLogBHandle*) handle;
 
     uint64_t timeShift = chandle->records ? (time - (
         chandle->records->records.empty() ? chandle->records->head.timeBase
